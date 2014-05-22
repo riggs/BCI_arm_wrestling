@@ -29,7 +29,7 @@ _event = Struct('event',
     ),
     UBInt32('sending_node'),
     Optional(UBInt32('message_length')),
-    Optional(Field('message', lambda ctx: ctx.message_length))
+    Optional(Field('message', lambda ctx: ctx.message_length or 0))
 )
 
 _EEG_data = Struct('_EEG_data',

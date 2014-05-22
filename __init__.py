@@ -12,7 +12,7 @@ def main():
     args = parser.parse_args()
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(args.ip_address, args.port)
+    sock.connect((args.ip_address, args.port))
     file_ = sock.makefile()
 
     try:
