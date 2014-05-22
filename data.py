@@ -1,6 +1,7 @@
 
 
-from construct import (Struct, Magic, UBInt8, UBInt16, UBInt32, Optional, Embed, Enum, String, Array, Field, OneOf)
+from construct import (Struct, Magic, UBInt8, UBInt16, UBInt32, Optional, Embed, Enum, Array, Field,
+                       BFloat32, GreedyRange, Switch, Debugger, Probe)
 
 
 _header = Struct('header',
@@ -12,6 +13,10 @@ _header = Struct('header',
     ),
     UBInt16('length'),
     UBInt32('number')
+)
+
+_null = Struct('null',
+               Array(111, UBInt8('none'))
 )
 
 _event = Struct('event',
@@ -27,12 +32,19 @@ _event = Struct('event',
     Optional(Field('message', lambda ctx: ctx.message_length))
 )
 
-_null = Struct('null',
-    Array(111, UBInt8('none'))
+_EEG_data = Struct('_EEG_data',
+    BFloat32('timestamp'),
+    UBInt8('data_counter'),     # Unused, just 0 currently
+    Field('ADC_status', 6),
+    GreedyRange(BFloat32('data'))
 )
 
 DSI_streamer_packet = Struct('DSI_streamer_packet',
     Embed(_header),
-    OneOf() # FIXME
+    Switch('data', lambda ctx: ctx.type,
+            {"NULL": Embed(_null),
+             "EEG_DATA": Embed(_EEG_data),
+             "EVENT": Embed(_event)}
+    )
 )
 
