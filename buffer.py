@@ -1,5 +1,5 @@
 
-from parser import DSI_streamer_packet
+from .parser import DSI_streamer_packet
 
 class PacketBuffer(object):
 
