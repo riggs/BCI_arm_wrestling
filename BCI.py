@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from .buffer import PacketBuffer
 
-from numpy import fft
+from numpy.fft import fft
 import socket
 
 class BCI_Session(object):

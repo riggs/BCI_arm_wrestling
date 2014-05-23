@@ -11,7 +11,7 @@ IP_ADDRESS = '10.128.230.239'
 OLD_CAP_PORT = 8844
 NEW_CAP_PORT = 8888
 
-EXPONENT = 2
+EXPONENT = 1.2
 
 def running_average():
     sum = 0.0
@@ -53,17 +53,17 @@ def main():
         new_cap_transform = new_cap.transform(new_cap.channel('F4') + new_cap.channel('C3'))
 
         # Get the max signal between 10 & 14 Hz
-        old_cap_signal = max(filter(lambda x: 10 < x[0] < 14, old_cap_transform), key=itemgetter(1))
-        new_cap_signal = max(filter(lambda x: 10 < x[0] < 14, new_cap_transform), key=itemgetter(1))
+        old_cap_signal = max(filter(lambda x: 10 < x[0] < 14, old_cap_transform), key=itemgetter(1))[1]
+        new_cap_signal = max(filter(lambda x: 10 < x[0] < 14, new_cap_transform), key=itemgetter(1))[1]
 
         old_cap_average = old_cap_running_average.send(old_cap_signal)
         new_cap_average = new_cap_running_average.send(new_cap_signal)
 
-        if old_cap_average >= old_cap_running_average:
+        if old_cap_signal >= old_cap_average:
             old_cap_displacement += old_cap_velocity
             old_cap_velocity *= EXPONENT
 
-        if new_cap_average >= new_cap_running_average:
+        if new_cap_signal >= new_cap_average:
             new_cap_displacement += new_cap_velocity
             new_cap_velocity *= EXPONENT
 
