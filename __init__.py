@@ -2,11 +2,14 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .BCI import BCI_Session
-from .output import output
+from .output import output, display
 
 from operator import itemgetter
+from tempfile import TemporaryFile
+from time import sleep
 
-IP_ADDRESS = '10.128.230.239'
+
+IP_ADDRESS = 'localhost'
 
 OLD_CAP_PORT = 8844
 NEW_CAP_PORT = 8888
@@ -23,10 +26,10 @@ def running_average():
         value = yield(sum/count)
 
 
-def main():
+def main(data_file=None):
 
-    old_cap = BCI_Session(['C3', 'C4'], IP_ADDRESS, OLD_CAP_PORT)
-    new_cap = BCI_Session(['F4', 'C3'], IP_ADDRESS, NEW_CAP_PORT)
+    old_cap = BCI_Session(['C3', 'C4'], IP_ADDRESS, OLD_CAP_PORT, data_file)
+    new_cap = BCI_Session(['F4', 'C3'], IP_ADDRESS, NEW_CAP_PORT, data_file)
 
     old_cap_running_average = running_average()
     new_cap_running_average = running_average()
@@ -36,8 +39,8 @@ def main():
     old_cap_displacement = 0
     new_cap_displacement = 0
 
-    old_cap_velocity = 1
-    new_cap_velocity = 1
+    old_cap_velocity = 5
+    new_cap_velocity = 5
 
     total_displacement = 0
 
@@ -45,8 +48,8 @@ def main():
 
         output(total_displacement)
 
-        old_cap.acquire_data(old_cap._sample_frequency/4)
-        new_cap.acquire_data(new_cap._sample_frequency/4)
+        old_cap.acquire_data(old_cap._sample_frequency)
+        new_cap.acquire_data(new_cap._sample_frequency)
 
         # old_cap_transform = old_cap.transform(map(sum, zip(*map(old_cap.channel, ['C3', 'C4']))))
         old_cap_transform = old_cap.transform(old_cap.channel('C3') + old_cap.channel('C4'))
@@ -55,6 +58,10 @@ def main():
         # Get the max signal between 10 & 14 Hz
         old_cap_signal = max(filter(lambda x: 10 < x[0] < 14, old_cap_transform), key=itemgetter(1))[1]
         new_cap_signal = max(filter(lambda x: 10 < x[0] < 14, new_cap_transform), key=itemgetter(1))[1]
+<<<<<<< HEAD
+=======
+        #print(old_cap_signal, new_cap_signal)
+>>>>>>> 65d340d78bd81a979dbcd56c1a7b551f27203e4c
 
         old_cap_average = old_cap_running_average.send(old_cap_signal)
         new_cap_average = new_cap_running_average.send(new_cap_signal)
@@ -67,11 +74,17 @@ def main():
             new_cap_displacement += new_cap_velocity
             new_cap_velocity *= EXPONENT
 
-        print(old_cap_displacement, new_cap_displacement)
+        #print(old_cap_average, new_cap_average)
+        #print(old_cap_displacement, old_cap_velocity, new_cap_displacement, new_cap_velocity)
 
         total_displacement = old_cap_displacement - new_cap_displacement
 
     print('Winner!')
+    output(total_displacement)
+    sleep(1)
+    #display(total_displacement)
+    output(0)
+    
 
 
 if __name__ == '__main__':

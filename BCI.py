@@ -4,13 +4,19 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from .buffer import PacketBuffer
 
 from numpy.fft import fft
+from uuid import uuid4
 import socket
 
 class BCI_Session(object):
 
-    def __init__(self, channel_list, ip_address='localhost', port=8844):
+    def __init__(self, channel_list, ip_address='localhost', port=8844, data_file=None):
+
+        self._data_file = data_file
+
+        self.id = uuid4()
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.settimeout(2)
         self._socket.connect((ip_address, port))
         self._packet_stream = PacketBuffer(self._socket)
 
@@ -39,6 +45,8 @@ class BCI_Session(object):
         self._process_packet(packet)
 
     def _process_packet(self, packet):
+        #print('{0}: {1!r}\n'.format(self.id, packet))
+        self._data_file.write('{0}: {1!r}\n'.format(self.id, packet))
         if not packet.type == 'EEG_DATA':
             raise ValueError('Wrong packet type')
         for channel, index in self._channel_map.iteritems():
