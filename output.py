@@ -5,7 +5,7 @@ from time import sleep
 
 arms = serial.Serial(13)
 
-#balloon = serial.Serial(12)
+balloon = serial.Serial(12)
 
 
 def output(value):
