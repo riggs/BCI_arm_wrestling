@@ -7,16 +7,32 @@ from numpy.fft import fft
 from uuid import uuid4
 import socket
 
+import logging
+
+packet_logger = logging.getLogger('DSI_packets')
+packet_logger.setLevel(logging.INFO)
+packet_logger.addHandler(logging.NullHandler())
+
+logger = logging.getLogger(__name__)
+
+
 class BCI_Session(object):
 
     def __init__(self, channel_list, ip_address='localhost', port=8844, data_file=None):
 
-        self._data_file = data_file
-
         self.id = uuid4()
+
+        if data_file is not None:
+            fh = logging.FileHandler(data_file)
+            fh.setLevel(logging.INFO)
+            self._logger = packet_logger.getChild(self.id)
+            self._logger.addHandler(fh)
+        else:
+            self._logger = packet_logger
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.settimeout(2)
+        logger.debug('Connecting to %s:%s', ip_address, port)
         self._socket.connect((ip_address, port))
         self._packet_stream = DSI_Packet_Buffer(self._socket)
 
@@ -25,6 +41,7 @@ class BCI_Session(object):
 
         packet = self._packet_stream.next()
         while packet.type == 'EVENT':
+            self.log(packet)
             if packet.code == 'VERSION':
                 packet = self._packet_stream.next()
                 continue
@@ -46,8 +63,7 @@ class BCI_Session(object):
 
     def _process_packet(self, packet):
         #print('{0}: {1!r}\n'.format(self.id, packet))
-        if self._data_file:
-            self._data_file.write('{0}: {1!r}\n'.format(self.id, packet))
+        self.log(packet)
         if not packet.type == 'EEG_DATA':
             raise ValueError('Wrong packet type')
         for channel, index in self._channel_map.iteritems():
@@ -60,6 +76,9 @@ class BCI_Session(object):
 
     def channel(self, channel):
         return self._data_buffers[channel]
+
+    def log(self, packet):
+        self._logger.info(packet)
 
 
 def transform(data, sample_size, sample_frequency):
