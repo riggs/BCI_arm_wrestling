@@ -41,7 +41,7 @@ _EEG_data = Struct('embedded',
 
 
 _null = Struct('embedded',
-               Array(111, UBInt8('none'))
+    Array(111, UBInt8('none'))
 )
 
 
