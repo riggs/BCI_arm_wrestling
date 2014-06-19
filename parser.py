@@ -25,9 +25,9 @@ _event = Struct('embedded',
     ),
     UBInt32('sending_node'),  # byes 16-19
     # Message data is optional
-    If(lambda ctx: ctx.length > 20,  # Counting from 0
+    If(lambda ctx: ctx.length > 8,  # Counting from 0
         # message_length: bytes 20-23, message: bytes 24+
-        PascalString('message', length_field=UBInt32('message_length', encoding='ascii'))
+        PascalString('message', length_field=UBInt32('message_length'), encoding='ascii')
     )
 )
 
@@ -36,7 +36,7 @@ _EEG_data = Struct('embedded',
     BFloat32('timestamp'),  # bytes 12-15
     UBInt8('data_counter'),  # byte 16; Unused, just 0 currently
     Field('ADC_status', 6),  # bytes 17-22
-    Array(lambda ctx: ctx.length - 23, BFloat32(''))  # bytes 23-26, 27-30, etc.
+    Array(lambda ctx: (ctx.length - 11)/4, BFloat32('channel_data'))  # bytes 23-26, 27-30, etc.
 )
 
 

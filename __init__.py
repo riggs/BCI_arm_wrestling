@@ -57,10 +57,10 @@ def main(data_file=None):
         new_cap.acquire_data(new_cap.sample_frequency)
 
         # old_cap_transform = old_cap.transform(map(sum, zip(*map(old_cap.channel, ['C3', 'C4']))))
-        old_cap_transform = transform(old_cap.channel('C3') + old_cap.channel('C4'),
-                                      sample_size=150, sample_frequency=old_cap.sample_frequency)
-        new_cap_transform = transform(new_cap.channel('F4') + new_cap.channel('C3'),
-                                      sample_size=150, sample_frequency=new_cap.sample_frequency)
+        old_cap_transform = transform(old_cap.channel('C3')[-150:] + old_cap.channel('C4')[-150:],
+                                      sample_frequency=old_cap.sample_frequency)
+        new_cap_transform = transform(new_cap.channel('F4')[-150:] + new_cap.channel('C3')[-150:],
+                                      sample_frequency=new_cap.sample_frequency)
 
         # Get the max signal between 10 & 14 Hz
         old_cap_signal = max(filter(lambda x: 10 < x[0] < 14, old_cap_transform), key=itemgetter(1))[1]
