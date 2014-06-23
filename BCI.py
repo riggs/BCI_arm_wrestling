@@ -90,6 +90,16 @@ class BCI_Session(object):
         else:
             LOG.info("Received DATA_START")
 
+    def _log_packet(self, packet):
+        self._logger.info(self.packet_encoder(packet))
+
+    def _next_packet(self):
+        packet = DSI_streamer_packet.parse_stream(self._socket_file)
+        while packet.type is "NULL":  # Drop NULL packets
+            packet = DSI_streamer_packet.parse_stream(self._socket_file)
+        self._log_packet(packet)
+        return packet
+
     def _record_data(self, packet):
         if packet.type is not "EEG_DATA":
             raise ValueError("Wrong packet type")

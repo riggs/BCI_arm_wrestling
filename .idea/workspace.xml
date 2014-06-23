@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="99237c32-18ee-446b-97d8-0ebfd68ffd87" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/analysis.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/BCI.py" afterPath="$PROJECT_DIR$/BCI.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parser.py" afterPath="$PROJECT_DIR$/parser.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="BCI_arm_wrestling.iws" />
@@ -43,8 +41,8 @@
       <file leaf-file-name="BCI.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/BCI.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6727273" vertical-offset="795" max-vertical-offset="2175">
-              <caret line="90" column="8" selection-start-line="90" selection-start-column="8" selection-end-line="90" selection-end-column="8" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1470" max-vertical-offset="2325">
+              <caret line="98" column="12" selection-start-line="98" selection-start-column="12" selection-end-line="98" selection-end-column="12" />
               <folding>
                 <element signature="e#1#83#0" expanded="true" />
               </folding>
@@ -403,7 +401,11 @@
       <created>1403167971571</created>
       <updated>1403167971571</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Refactor all the things.">
+      <created>1403483458308</created>
+      <updated>1403483458308</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -449,7 +451,8 @@
     <MESSAGE value="Autoformatting still lacks broader context. Also this is a test for the epeen." />
     <MESSAGE value="Replace DIY logging with standard library logging" />
     <MESSAGE value="Removed buffer entirely, improved FFT calls, in the midst of refactoring BCI_session. I should commit more often." />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed buffer entirely, improved FFT calls, in the midst of refactoring BCI_session. I should commit more often." />
+    <MESSAGE value="Refactor all the things." />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactor all the things." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -568,8 +571,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/BCI.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6727273" vertical-offset="795" max-vertical-offset="2175">
-          <caret line="90" column="8" selection-start-line="90" selection-start-column="8" selection-end-line="90" selection-end-column="8" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1470" max-vertical-offset="2325">
+          <caret line="98" column="12" selection-start-line="98" selection-start-column="12" selection-end-line="98" selection-end-column="12" />
           <folding>
             <element signature="e#1#83#0" expanded="true" />
           </folding>
