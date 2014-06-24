@@ -18,7 +18,7 @@ packet_logger.addHandler(logging.NullHandler())
 LOG = logging.getLogger(__name__)
 
 
-class BCI_Session(object):
+class DSI_Streamer_Session(object):
 
     packet_encoder = json.dumps
 

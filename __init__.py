@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from .BCI import BCI_Session, transform
+from .BCI import DSI_Streamer_Session
+from .analysis import transform
 from .output import output, display
 
 from operator import itemgetter
@@ -33,8 +34,8 @@ def running_average_coro():
 
 
 def main(data_file=None):
-    old_cap = BCI_Session(['C3', 'C4'], IP_ADDRESS, OLD_CAP_PORT, data_file)
-    new_cap = BCI_Session(['F4', 'C3'], IP_ADDRESS, NEW_CAP_PORT, data_file)
+    old_cap = DSI_Streamer_Session(['C3', 'C4'], IP_ADDRESS, OLD_CAP_PORT, data_file)
+    new_cap = DSI_Streamer_Session(['F4', 'C3'], IP_ADDRESS, NEW_CAP_PORT, data_file)
 
     old_cap_running_average = running_average_coro()
     new_cap_running_average = running_average_coro()
