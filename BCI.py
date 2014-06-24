@@ -19,10 +19,22 @@ LOG = logging.getLogger(__name__)
 
 
 class DSI_Streamer_Session(object):
+    """
+    This class connects to DSI-Streamer software and collects data from it for convenient use.
+
+    :param log_file: A file name to log all packets received from DSI-Streamer. By default, packets are JSON-encoded
+     (see `packet_encoder` attribute).
+    :param ip_address: The IP address of the machine running DSI-Streamer.
+    :param port: The 'Client Port' as specified in DSI-Streamer.
+    :param timeout: The value passed to socket.settimeout for the connection to DSI-Streamer.
+    :param data_age: The time, in seconds, of the oldest data to keep in memory. Data older than this value is purged
+     after every data-acquisition cycle. This is probably only relevant if you plan to run a single session for
+     extended periods. By default, all data is saved for the life of the instance.
+    """
 
     packet_encoder = json.dumps
 
-    def __init__(self, log_file=None, ip_address='localhost', port=8844, timeout=None, analysis_window=None):
+    def __init__(self, log_file=None, ip_address='localhost', port=8844, timeout=None, data_age=None):
 
         self._id = uuid4()
         self.sample_frequency = None
@@ -30,7 +42,7 @@ class DSI_Streamer_Session(object):
         self.timestamps = list()
         self.channel_data = dict()
         self.sensor_map = dict()
-        self.analysis_window = analysis_window
+        self.data_age = data_age
 
         self._logger = packet_logger.getChild(self._id)
         if log_file is not None:
@@ -117,6 +129,15 @@ class DSI_Streamer_Session(object):
         for channel_name, index in self.sensor_map.items():
             insert_func(self.channel_data[channel_name], packet.data[index])
 
+    def _trim_data(self):
+        if self.data_age is None:
+            return
+        max_count = self.data_age * (self.sample_frequency or 900)  # Assume worst case if missing value
+        LOG.info("Trimming data to %s points", max_count)
+        for name, data in self.channel_data.items():
+            self.channel_data[name] = data[max_count:]
+        self.timestamps = self.timestamps[max_count:]
+
     def acquire_data(self, duration=0.2):
         """
         Acquire data for a duration of time.
@@ -142,8 +163,6 @@ class DSI_Streamer_Session(object):
             self._record_data(packet)
             packet_count -= 1
 
-        if self.analysis_window is not None:
-            max_count = self.analysis_window * (self.sample_frequency or 900)
-            LOG.info("Trimming data to %s points", max_count)
-            for name, data in self.channel_data.items():
-                self.channel_data[name] = data[max_count:]
+        if self.data_age is not None:
+            self._trim_data()
+

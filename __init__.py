@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .BCI import DSI_Streamer_Session
-from .analysis import transform
+from .analysis import transform, running_average_coro
 from .output import output, display
 
 from operator import itemgetter
@@ -16,31 +16,14 @@ NEW_CAP_PORT = 8888
 EXPONENT = 1.2
 
 
-def running_average_coro():
-    """
-    A coroutine to compute a running average.
-
-    Because of the peculiarities of python generator functions, this function acts more like a class. Call it to
-    instantiate a new coroutine and initialize the coroutine using 'next'. Once it's operational, sending it a value
-    (via it's .send method) will return the running average of everything it's been sent.
-    """
-    sum = 0.0
-    count = 0
-    value = yield (float('nan'))
-    while True:
-        sum += value
-        count += 1
-        value = yield (sum / count)
-
-
 def main(data_file=None):
-    old_cap = DSI_Streamer_Session(['C3', 'C4'], IP_ADDRESS, OLD_CAP_PORT, data_file)
-    new_cap = DSI_Streamer_Session(['F4', 'C3'], IP_ADDRESS, NEW_CAP_PORT, data_file)
+    old_cap = DSI_Streamer_Session(log_file=data_file, ip_address=IP_ADDRESS, port=OLD_CAP_PORT)
+    new_cap = DSI_Streamer_Session(log_file=data_file, ip_address=IP_ADDRESS, port=NEW_CAP_PORT)
 
     old_cap_running_average = running_average_coro()
     new_cap_running_average = running_average_coro()
-    next(old_cap_running_average)  # Returns float('nan')
-    next(new_cap_running_average)  # Returns float('nan')
+    next(old_cap_running_average)  # Returns NaN
+    next(new_cap_running_average)  # Returns NaN
 
     old_cap_displacement = 0
     new_cap_displacement = 0
@@ -58,9 +41,9 @@ def main(data_file=None):
         new_cap.acquire_data(new_cap.sample_frequency)
 
         # old_cap_transform = old_cap.transform(map(sum, zip(*map(old_cap.channel, ['C3', 'C4']))))
-        old_cap_transform = transform(old_cap.channel('C3')[-150:] + old_cap.channel('C4')[-150:],
+        old_cap_transform = transform(old_cap.channel_data['C3'][-150:] + old_cap.channel_data['C4'][-150:],
                                       sample_frequency=old_cap.sample_frequency)
-        new_cap_transform = transform(new_cap.channel('F4')[-150:] + new_cap.channel('C3')[-150:],
+        new_cap_transform = transform(new_cap.channel_data['F4'][-150:] + new_cap.channel_data['C3'][-150:],
                                       sample_frequency=new_cap.sample_frequency)
 
         # Get the max signal between 10 & 14 Hz
