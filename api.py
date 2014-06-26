@@ -1,7 +1,7 @@
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
-from .parser import DSI_streamer_packet, packet_versions
+from .protocol import DSI_streamer_packet, packet_versions
 
 from uuid import uuid4
 from warnings import warn
@@ -11,11 +11,12 @@ import json
 
 import logging
 
+# Module-wide logger
+LOG = logging.getLogger(__name__)
+
 packet_logger = logging.getLogger("DSI_packets")
 packet_logger.setLevel(logging.INFO)
 packet_logger.addHandler(logging.NullHandler())
-# Module-wide logger
-LOG = logging.getLogger(__name__)
 
 
 class DSI_Streamer_Session(object):
@@ -24,23 +25,37 @@ class DSI_Streamer_Session(object):
 
     :param log_file: A file name to log all packets received from DSI-Streamer. By default, packets are JSON-encoded
      (see `packet_encoder` attribute).
+    :type log_file: str
     :param ip_address: The IP address of the machine running DSI-Streamer.
+    :type ip_address: str
     :param port: The 'Client Port' as specified in DSI-Streamer.
-    :param timeout: The value passed to socket.settimeout for the connection to DSI-Streamer.
+    :type port: int
+    :param timeout: The value passed to the :meth:`~socket.socket.settimeout` method of the :class:socket.socket
+     connection to DSI-Streamer.
+    :type timeout: int or float
     :param data_age: The time, in seconds, of the oldest data to keep in memory. Data older than this value is purged
      after every data-acquisition cycle. This is probably only relevant if you plan to run a single session for
      extended periods. By default, all data is saved for the life of the instance.
+    :type data_age: int or float
+
+    Upon initialization, this class connects to the given IP & port combination. It then expects to receive packets as
+    dictated by the TCP/IP Socket protocol documentation `available here
+    <http://wearablesensing.com/support_downloads.php>`.
+
+
     """
 
-    packet_encoder = json.dumps
+    @staticmethod
+    def packet_encoder(packet):
+        return json.dumps(dict(packet))
 
     def __init__(self, log_file=None, ip_address='localhost', port=8844, timeout=None, data_age=None):
 
-        self._id = uuid4()
+        self._id = uuid4().hex
         self.sample_frequency = None
         self.mains_frequency = None
         self.timestamps = list()
-        self.channel_data = dict()
+        self.sensor_data = dict()
         self.sensor_map = dict()
         self.data_age = data_age
 
@@ -80,12 +95,12 @@ class DSI_Streamer_Session(object):
         else:
             array = packet.message.strip().split(',')
             for index, name in enumerate(array):
-                if name is '-':
+                if name == '-':
                     continue
                 self.sensor_map[name] = index
             for name in self.sensor_map:
-                self.channel_data[name] = list()
-            LOG.info('Initialized channel_data')
+                self.sensor_data[name] = list()
+            LOG.info('Initialized sensor_data')
 
         # Third packet should be DATA_RATE.
         packet = self._next_packet()
@@ -127,16 +142,16 @@ class DSI_Streamer_Session(object):
         insert_func(self.timestamps, timestamp)
 
         for channel_name, index in self.sensor_map.items():
-            insert_func(self.channel_data[channel_name], packet.data[index])
+            insert_func(self.sensor_data[channel_name], packet.sensor_data[index])
 
     def _trim_data(self):
         if self.data_age is None:
             return
-        max_count = self.data_age * (self.sample_frequency or 900)  # Assume worst case if missing value
+        max_count = int(self.data_age * (self.sample_frequency or 900))  # Assume worst case if missing value
         LOG.info("Trimming data to %s points", max_count)
-        for name, data in self.channel_data.items():
-            self.channel_data[name] = data[max_count:]
-        self.timestamps = self.timestamps[max_count:]
+        for name, data in self.sensor_data.items():
+            self.sensor_data[name] = data[-max_count:]
+        self.timestamps = self.timestamps[-max_count:]
 
     def acquire_data(self, duration=0.2):
         """

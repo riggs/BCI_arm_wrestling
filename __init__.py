@@ -1,76 +1,80 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
 
-from .BCI import DSI_Streamer_Session
-from .analysis import transform, running_average_coro
-from .output import output, display
+from __future__ import print_function, absolute_import, division
+
+from .api import DSI_Streamer_Session, LOG
+from .analysis import running_average_coro, fft_power
+#from .output import output, display
+from .output import output
 
 from operator import itemgetter
-from time import sleep
+#from time import sleep
 
 
-IP_ADDRESS = 'localhost'
+IP_ADDRESS = '10.1.10.25'
+PORT = 8844
 
-OLD_CAP_PORT = 8844
-NEW_CAP_PORT = 8888
-
-EXPONENT = 1.2
+EXPONENT = 1.1
 
 
-def main(data_file=None):
-    old_cap = DSI_Streamer_Session(log_file=data_file, ip_address=IP_ADDRESS, port=OLD_CAP_PORT)
-    new_cap = DSI_Streamer_Session(log_file=data_file, ip_address=IP_ADDRESS, port=NEW_CAP_PORT)
+def main(data_file=None, debug=False):
 
-    old_cap_running_average = running_average_coro()
-    new_cap_running_average = running_average_coro()
-    next(old_cap_running_average)  # Returns NaN
-    next(new_cap_running_average)  # Returns NaN
+    if debug:  # Log to stdout
+        import logging, sys
+        LOG.setLevel(logging.DEBUG)
+        stdout = logging.StreamHandler(sys.stdout)
+        stdout.setLevel(logging.DEBUG)
+        LOG.addHandler(stdout)
 
-    old_cap_displacement = 0
-    new_cap_displacement = 0
+    # Connect to DSI-Streamer
+    cap = DSI_Streamer_Session(log_file=data_file, ip_address=IP_ADDRESS, port=PORT, data_age=0.5)
 
-    old_cap_velocity = 5
-    new_cap_velocity = 5
+    P4_running_average = running_average_coro()
+    next(P4_running_average)  # Required boilerplate, returns NaN
+    C4_running_average = running_average_coro()
+    next(C4_running_average)  # Required boilerplate, returns NaN
+
+    P4_displacement = 0
+    C4_displacement = 0
+
+    P4_velocity = 3
+    C4_velocity = 3
 
     total_displacement = 0
+
+    cap.acquire_data(0.5)  # Make sure there's enough data for first analysis
 
     while -45 < total_displacement < 45:
 
         output(total_displacement)
 
-        old_cap.acquire_data(old_cap.sample_frequency)
-        new_cap.acquire_data(new_cap.sample_frequency)
+        cap.acquire_data()
 
-        # old_cap_transform = old_cap.transform(map(sum, zip(*map(old_cap.channel, ['C3', 'C4']))))
-        old_cap_transform = transform(old_cap.channel_data['C3'][-150:] + old_cap.channel_data['C4'][-150:],
-                                      sample_frequency=old_cap.sample_frequency)
-        new_cap_transform = transform(new_cap.channel_data['F4'][-150:] + new_cap.channel_data['C3'][-150:],
-                                      sample_frequency=new_cap.sample_frequency)
+        # Because of 'data_age=0.5', only last 1/2 second of signal is analyzed
+        P4_power = fft_power(cap.sensor_data['P4'], sample_frequency=cap.sample_frequency)
+        C4_power = fft_power(cap.sensor_data['C4'], sample_frequency=cap.sample_frequency)
 
         # Get the max signal between 10 & 14 Hz
-        old_cap_signal = max(filter(lambda x: 10 < x[0] < 14, old_cap_transform), key=itemgetter(1))[1]
-        new_cap_signal = max(filter(lambda x: 10 < x[0] < 14, new_cap_transform), key=itemgetter(1))[1]
+        P4_signal = max(filter(lambda x: 10 < x[0] < 14, P4_power), key=itemgetter(1))[1]
+        C4_signal = max(filter(lambda x: 10 < x[0] < 14, C4_power), key=itemgetter(1))[1]
 
-        old_cap_average = old_cap_running_average.send(old_cap_signal)
-        new_cap_average = new_cap_running_average.send(new_cap_signal)
+        P4_average = P4_running_average.send(P4_signal)
+        C4_average = C4_running_average.send(C4_signal)
 
-        if old_cap_signal >= old_cap_average:
-            old_cap_displacement += old_cap_velocity
-            old_cap_velocity *= EXPONENT
+        if P4_signal >= P4_average:
+            P4_displacement += P4_velocity
+            P4_velocity *= EXPONENT
 
-        if new_cap_signal >= new_cap_average:
-            new_cap_displacement += new_cap_velocity
-            new_cap_velocity *= EXPONENT
+        if C4_signal >= C4_average:
+            C4_displacement += C4_velocity
+            C4_velocity *= EXPONENT
 
-        # print(old_cap_average, new_cap_average)
-        # print(old_cap_displacement, old_cap_velocity, new_cap_displacement, new_cap_velocity)
+        total_displacement = P4_displacement - C4_displacement
 
-        total_displacement = old_cap_displacement - new_cap_displacement
-
-    print('Winner!')
     output(total_displacement)
-    sleep(1)
+    print('Winner!')
+    #sleep(1)
     # display(total_displacement)
-    output(0)
+    #output(0)
 
 
 if __name__ == '__main__':

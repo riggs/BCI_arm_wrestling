@@ -6,7 +6,7 @@ packet_versions = ('DSI-Streamer-v.0.7.15',)
 
 _header = Struct('embedded',
     Magic('@ABCD'),  # bytes 0-5
-    Enum(UBInt8('packet_type'),  # byte 5
+    Enum(UBInt8('type'),  # byte 5
          NULL=0,
          EEG_DATA=1,
          EVENT=5
@@ -36,7 +36,7 @@ _EEG_data = Struct('embedded',
     BFloat32('timestamp'),  # bytes 12-15
     UBInt8('data_counter'),  # byte 16; Unused, just 0 currently
     Field('ADC_status', 6),  # bytes 17-22
-    Array(lambda ctx: (ctx.payload_length - 11)/4, BFloat32('channel_data'))  # bytes 23-26, 27-30, etc.
+    Array(lambda ctx: (ctx.payload_length - 11)/4, BFloat32('sensor_data'))  # bytes 23-26, 27-30, etc.
 )
 
 
@@ -47,7 +47,7 @@ _null = Struct('embedded',
 
 DSI_streamer_packet = Struct('DSI_streamer_packet',
     Embed(_header),
-    Switch('payload', lambda ctx: ctx.packet_type,
+    Switch('payload', lambda ctx: ctx.type,
            {"NULL": Embed(_null),
             "EVENT": Embed(_event),
             "EEG_DATA": Embed(_EEG_data)}

@@ -1,4 +1,6 @@
 
+from __future__ import print_function, absolute_import, division
+
 import numpy
 
 
@@ -19,7 +21,7 @@ def running_average_coro():
         value = yield (sum / count)
 
 
-def transform(data, sample_frequency):
+def fft(data, sample_frequency):
     """
     Compute a Fast Fourier Transform (FFT) of a given data set.
 
@@ -27,6 +29,11 @@ def transform(data, sample_frequency):
     :param sample_frequency:
     :return:
     """
-    transformed = numpy.fft.fft(data)
+    amplitudes = numpy.fft.fft(data)
     frequencies = numpy.fft.fftfreq(len(data), 1/sample_frequency)
-    return frequencies, transformed
+    return frequencies, amplitudes
+
+def fft_power(data, sample_frequency):
+    frequencies, amplitudes = fft(data, sample_frequency)
+    power = numpy.square(numpy.abs(amplitudes))
+    return zip(frequencies, power)
