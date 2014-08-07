@@ -9,11 +9,10 @@ from .output import output
 from operator import itemgetter
 from random import choice
 #from time import sleep
-from numpy import subtract
 
 
-IP_ADDRESS = '10.1.10.25'
-PORT = 8844
+IP_ADDRESS = '10.1.10.25'  # IP of host running DSI-Streamer, 'localhost' if on the same machine
+PORT = 8844  # Port as specified in DSI-Streamer. Multiple ports allow multi-cap analysis
 
 EXPONENT = 1
 
