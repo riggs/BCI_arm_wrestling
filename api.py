@@ -78,7 +78,7 @@ class DSI_Streamer_Session(object):
             packet = self._next_packet()
 
         # First packet sent on connection should be VERSION packet.
-        if packet.type is not 'EVENT' or packet.event_code is not 'VERSION':
+        if packet.type != 'EVENT' or packet.event_code != 'VERSION':
             LOG.warn("Expected VERSION packet, got: %s", self.packet_encoder(packet))
         else:
             if packet.message.strip() not in packet_versions:
@@ -89,7 +89,7 @@ class DSI_Streamer_Session(object):
 
         # Second packet should be SENSOR_MAP.
         packet = self._next_packet()
-        if packet.type is not 'EVENT' or packet.event_code is not 'SENSOR_MAP':
+        if packet.type != 'EVENT' or packet.event_code != 'SENSOR_MAP':
             LOG.warn("Expected SENSOR_MAP packet, got: %s", self.packet_encoder(packet))
             warn("Didn't receive SENSOR_MAP packet, unable to process data")
         else:
@@ -104,7 +104,7 @@ class DSI_Streamer_Session(object):
 
         # Third packet should be DATA_RATE.
         packet = self._next_packet()
-        if packet.type is not 'EVENT' or packet.event_code is not 'DATA_RATE':
+        if packet.type != 'EVENT' or packet.event_code != 'DATA_RATE':
             LOG.warn("Expected DATA_RATE packet, got: %s", self.packet_encoder(packet))
         else:
             self.mains_frequency, self.sample_frequency = map(int, packet.message.split(','))
@@ -112,7 +112,7 @@ class DSI_Streamer_Session(object):
 
         # Fourth packet should be DATA_START.
         packet = self._next_packet()
-        if packet.type is not 'EVENT' or packet.event_code is not 'DATA_START':
+        if packet.type != 'EVENT' or packet.event_code != 'DATA_START':
             LOG.warn("Expected DATA_START packet, got: %s", self.packet_encoder(packet))
         else:
             LOG.info("Received DATA_START")
@@ -122,13 +122,13 @@ class DSI_Streamer_Session(object):
 
     def _next_packet(self):
         packet = DSI_streamer_packet.parse_stream(self._socket_file)
-        while packet.type is "NULL":  # Drop NULL packets
+        while packet.type == "NULL":  # Drop NULL packets
             packet = DSI_streamer_packet.parse_stream(self._socket_file)
         self._log_packet(packet)
         return packet
 
     def _record_data(self, packet):
-        if packet.type is not "EEG_DATA":
+        if packet.type != "EEG_DATA":
             raise ValueError("Wrong packet type")
 
         # Ensure data is time-sorted
@@ -169,8 +169,8 @@ class DSI_Streamer_Session(object):
 
         while packet_count > 0:
             packet = self._next_packet()
-            if packet.type is 'EVENT':
-                if packet.event_code is 'DATA_STOP':
+            if packet.type == 'EVENT':
+                if packet.event_code == 'DATA_STOP':
                     return
                 else:
                     self._streaming_start(packet)
